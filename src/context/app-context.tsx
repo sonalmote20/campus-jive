@@ -47,28 +47,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-        const savedUser = localStorage.getItem(USER_STORAGE_KEY);
-        if (savedUser) setUser(JSON.parse(savedUser));
-        
-        const savedPin = localStorage.getItem(STUDENT_PIN_STORAGE_KEY);
-        setStudentPin(savedPin || DEFAULT_PIN);
-        
-        const savedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
-        setEvents(savedEvents ? JSON.parse(savedEvents) : initialEvents);
+    // Wrap localStorage access in a check for window to ensure it only runs on the client
+    if (typeof window !== 'undefined') {
+      try {
+          const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+          if (savedUser) setUser(JSON.parse(savedUser));
+          
+          const savedPin = localStorage.getItem(STUDENT_PIN_STORAGE_KEY);
+          setStudentPin(savedPin || DEFAULT_PIN);
+          
+          // Load events or set initial data
+          const savedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+          const parsedEvents = savedEvents ? JSON.parse(savedEvents) : [];
+          if (parsedEvents.length > 0) {
+              setEvents(parsedEvents);
+          } else {
+              setEvents(initialEvents);
+              localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(initialEvents));
+          }
 
-        const savedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-        setCategories(savedCategories ? JSON.parse(savedCategories) : initialCategories);
+          // Load categories or set initial data
+          const savedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+          const parsedCategories = savedCategories ? JSON.parse(savedCategories) : [];
+          if (parsedCategories.length > 0) {
+              setCategories(parsedCategories);
+          } else {
+              setCategories(initialCategories);
+              localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(initialCategories));
+          }
+          
+          // Load photos or set initial data
+          const savedPhotos = localStorage.getItem(PHOTOS_STORAGE_KEY);
+          const parsedPhotos = savedPhotos ? JSON.parse(savedPhotos) : [];
+          if (parsedPhotos.length > 0) {
+              setPhotos(parsedPhotos);
+          } else {
+              setPhotos(initialPhotos);
+              localStorage.setItem(PHOTOS_STORAGE_KEY, JSON.stringify(initialPhotos));
+          }
 
-        const savedBookings = localStorage.getItem(BOOKINGS_STORAGE_KEY);
-        setBookings(savedBookings ? JSON.parse(savedBookings) : []);
-        
-        const savedPhotos = localStorage.getItem(PHOTOS_STORAGE_KEY);
-        setPhotos(savedPhotos ? JSON.parse(savedPhotos) : initialPhotos);
+          // Load bookings
+          const savedBookings = localStorage.getItem(BOOKINGS_STORAGE_KEY);
+          setBookings(savedBookings ? JSON.parse(savedBookings) : []);
 
-    } catch (error) {
-        console.error("Failed to parse from localStorage", error);
-    } finally {
+      } catch (error) {
+          console.error("Failed to parse from localStorage", error);
+      } finally {
+          setLoading(false);
+      }
+    } else {
+        // For server-side rendering, start with empty or default state without loading data
         setLoading(false);
     }
   }, []);
@@ -269,3 +297,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+
